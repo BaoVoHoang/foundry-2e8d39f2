@@ -25,10 +25,15 @@ function recomputeDisplay(gridRaw: GridState): GridState {
   return display;
 }
 
-export default function Grid() {
-  const [gridRaw, setGridRaw] = useState<GridState>({});
+interface GridProps {
+  gridRaw: GridState;
+  setGridRaw: (grid: GridState) => void;
+  selectedCell: string | null;
+  setSelectedCell: (cellId: string | null) => void;
+}
+
+export default function Grid({ gridRaw, setGridRaw, selectedCell, setSelectedCell }: GridProps) {
   const [gridDisplay, setGridDisplay] = useState<GridState>({});
-  const [selectedCell, setSelectedCell] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -36,22 +41,21 @@ export default function Grid() {
     setGridRaw(data.grid);
     setGridDisplay(recomputeDisplay(data.grid));
     setLoaded(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCommit = (cellId: string, value: string) => {
-    setGridRaw((prev) => {
-      const nextRaw: GridState = { ...prev };
-      if (value === '') {
-        delete nextRaw[cellId];
-      } else {
-        nextRaw[cellId] = value;
-      }
+    const nextRaw: GridState = { ...gridRaw };
+    if (value === '') {
+      delete nextRaw[cellId];
+    } else {
+      nextRaw[cellId] = value;
+    }
 
-      const nextDisplay = recomputeDisplay(nextRaw);
-      setGridDisplay(nextDisplay);
-      saveGrid({ grid: nextRaw, lastModified: Date.now() });
-      return nextRaw;
-    });
+    const nextDisplay = recomputeDisplay(nextRaw);
+    setGridDisplay(nextDisplay);
+    saveGrid({ grid: nextRaw, lastModified: Date.now() });
+    setGridRaw(nextRaw);
   };
 
   if (!loaded) {
